@@ -1157,10 +1157,6 @@
                         <input type="text" id="customer-name" class="form-control" placeholder="Enter your full name" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="customer-email">Email Address *</label>
-                        <input type="email" id="customer-email" class="form-control" placeholder="Enter your email" required>
-                    </div>
                     
                     <div class="form-group">
                         <label for="customer-mobile">Mobile Number *</label>
@@ -1172,10 +1168,6 @@
                         <textarea id="customer-address" class="form-control" rows="3" placeholder="Enter your delivery address" required></textarea>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="customer-notes">Order Notes (Optional)</label>
-                        <textarea id="customer-notes" class="form-control" rows="2" placeholder="Any special instructions for your order"></textarea>
-                    </div>
                     
                     <div class="cart-total" style="margin-top: 20px;">
                         <span>Order Total:</span>
@@ -1678,44 +1670,7 @@
             showNotification("Item removed from cart", "warning");
         }
         
-        // Checkout
-        // function checkout() {
-        //     if (cart.length === 0) return;
-            
-        //     // Generate WhatsApp message
-        //     const phone = "9346145612"; // Replace with your WhatsApp number
-        //     let message = "New Order from FreshMart:%0a%0a";
-            
-        //     cart.forEach(item => {
-        //         message += `- ${item.name} (Qty: ${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}%0a`;
-        //     });
-            
-        //     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        //     message += `%0aTotal: $${total.toFixed(2)}%0a%0a Please pack these items!`;
-            
-        //     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-        //     window.open(whatsappUrl, '_blank');
-            
-        //     // Create order
-        //     const newOrder = {
-        //         id: Math.max(...orders.map(o => o.id)) + 1,
-        //         customer: "New Customer", // In a real app, you'd have customer info
-        //         items: cart.reduce((sum, item) => sum + item.quantity, 0),
-        //         total: total,
-        //         status: "new",
-        //         date: new Date().toISOString().split('T')[0]
-        //     };
-            
-        //     orders.unshift(newOrder);
-        //     renderOrders();
-            
-        //     // Clear cart
-        //     cart = [];
-        //     updateCartCount();
-        //     closeCart();
-        //     showNotification("Order placed! Check WhatsApp", "success");
-        // }
-        
+       
         // Show checkout form when clicking checkout
         function checkout() {
             if (cart.length === 0) {
@@ -1739,43 +1694,40 @@
             document.getElementById('checkout-form-modal').style.display = 'none';
         }
         
-        // Handle checkout form submission
-   const sheetUrl = "https://script.google.com/macros/s/AKfycbyF80vaoPAucMLtONE2yc_PdFUwMD_AwzfmeE4J_d3VI0hXiIdbfEIJ1uFv82UoVDOg/exec";
 
-    document.getElementById("customer-details-form").addEventListener("submit", async function (e) {
-        e.preventDefault();
+document.getElementById("customer-details-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
     const name = document.getElementById("customer-name").value.trim();
-    const email = document.getElementById("customer-email").value.trim();
     const phone = document.getElementById("customer-mobile").value.trim();
     const address = document.getElementById("customer-address").value.trim();
 
-    if (!name || !email || !phone || !address) {
+    if (!name || !phone || !address) {
         showNotification("Please fill all required fields", "error");
         return;
     }
 
-    const items = cart.map(item => `${item.name} (Qty: ${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`).join('\n');
+    const items = cart.map(item => `${item.name} (Qty: ${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`).join(', ');
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+   // Replace FORM_ID with your real FormResponse ID
+    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSd220yDONGkzT4Pg32ZgKLv7HV7ym_h88vQnaS-CL2jAQpaCw/formResponse";
+     
+    
+    const formData = new FormData();
+    formData.append("entry.2005620554", name);    // Name
+    formData.append("entry.1065046570", address);  // Address
+    formData.append("entry.1166974658", phone);   // Phone
+    formData.append("entry.839337160", total);    // Total
+    formData.append("entry.648996638", items);    // Order Items 
+
+
     try {
-        const response = await fetch(sheetUrl, {
+        await fetch(formUrl, {
             method: "POST",
-            mode: "cors",
-            body: JSON.stringify({
-                name,
-                email,
-                phone,
-                address,
-                items,
-                total: total.toFixed(2)
-            }),
-            headers: { "Content-Type": "application/json" }
+            mode: "no-cors", // required for Google Forms
+            body: formData
         });
-
-        const result = await response.text(); // Apps Script may return plain text
-        console.log("Google Sheets Response:", result);
-
         // Add order locally
         const newOrder = {
             id: Math.max(...orders.map(o => o.id)) + 1,
